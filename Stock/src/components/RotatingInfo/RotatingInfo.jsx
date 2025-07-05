@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { handleStockClick } from '../../resolvers/resolver';
+import { handleStockClick } from '../../resolvers/HandleClick.js';
+import { fetchAnyMid20 } from '../../resolvers/SortURIFetcher.js';
+
 function RotatingInfo() {
     const [repoData, setInfo] = useState([]);
     const uri = import.meta.env.VITE_URI_GRAPH_DATA || 'https://raw.githubusercontent.com/Parikshit09-coder/stock-database/main/sp500_dummy_data.json';
@@ -10,7 +12,9 @@ function RotatingInfo() {
             try {
                 const res = await fetch(uri);
                 const data = await res.json();
-                setInfo(Array.isArray(data) ? data : [data]); // Ensure it's always an array
+
+              
+                setInfo(() => fetchAnyMid20(data)); 
             } catch (err) {
                 console.error('Failed to fetch rotating info:', err);
             }
@@ -18,8 +22,13 @@ function RotatingInfo() {
         fetchData();
     }, [uri]);
 
+
+
     return (
+      <div>
+       
         <div className="overflow-hidden w-full bg-gray-200 p-3 rounded-lg shadow-lg mb-0">
+          
   <div className="animate-marquee whitespace-nowrap hover:animate-paused cursor-pointer">
     {repoData.map((stock) => (
     
@@ -32,7 +41,7 @@ function RotatingInfo() {
      
     ))}
   </div>
-</div>
+</div></div>
     )
 }
 
