@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { Sparklines, SparklinesLine } from 'react-sparklines';
-
+import { Sparklines, SparklinesLine,SparklinesSpots,SparklinesText,SparklinesReferenceLine } from 'react-sparklines';
+import DropDown from '../StockPage/Dropdown.jsx';
 function StockPage() {
   const uri =
     import.meta.env.VITE_URI_GRAPH_DATA ||
@@ -9,6 +9,7 @@ function StockPage() {
 
   const { ticker } = useParams();
   const [stockData, setStockData] = useState([]);
+  const [sparklineData, setSparklineData] = useState("1D");
 
   useEffect(() => {
     const fetchData = async () => {
@@ -23,7 +24,7 @@ function StockPage() {
           setStockData((prevData) => {
             try {
               return prevData.map((stock) => {
-                const randomChange = (Math.random() * 3 - 1).toFixed(2);
+                const randomChange = (Math.random() * 2 - 1).toFixed(2);
                 const newPrice = (
                   parseFloat(stock.currentPrice) + parseFloat(randomChange)
                 ).toFixed(2);
@@ -52,7 +53,7 @@ function StockPage() {
               return prevData;
             }
           });
-        }, 5000);
+        },5000);
 
         return () => clearInterval(intervalId);
       } catch (error) {
@@ -103,23 +104,33 @@ function StockPage() {
       
       
       </div>
-          <div>
-           <li>
-            <ul>dsa</ul>
-            <ul>as</ul>
-            <ul>das</ul>
-           </li>
-          </div>
+        <div className="flex flex-col items-start">
+ 
+  <DropDown onChange={(data) => setSparklineData(data)} />
+
   
+  <div className="flex flex-wrap gap-3 mt-3 text-sm text-gray-800 font-semibold">
+    {(stock.performance?.[sparklineData] || []).map((price, index) => (
+      <span key={index} className="bg-gray-100 px-2 py-1 rounded">
+        ${price.toFixed(2)}
+      </span>
+    ))}
+  </div>
+</div>
   </div>
       
-      <div className="flex justify-center items-center border-l border-gray-300 pl-6">
-        <Sparklines data={stock.performance?.['1D'] || []} width={200} height={80}>
+      <div className="flex justify-center items-center border-l border-gray-300 pl-6 mr-2">
+     <Sparklines data={stock.performance?.[sparklineData] || []} width={200} height={80} style={{background: "#f0f0f0", borderRadius: '10px', padding: '10px'}}>
+
           <SparklinesLine
             color={stock.percentChange1D >= 0 ? 'green' : 'red'}
             style={{ fill: 'none', strokeWidth: 3 }}
           />
-        </Sparklines>
+          
+          <SparklinesSpots
+            style={{ fill: 'white', stroke: stock.percentChange1D >= 0 ? 'green' : 'red', strokeWidth: 2 }}/> 
+        </Sparklines> 
+             
       </div>
     </div>
   ))}

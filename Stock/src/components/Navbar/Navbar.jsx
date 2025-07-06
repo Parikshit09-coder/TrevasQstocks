@@ -1,5 +1,5 @@
 import React from 'react';
-import trevaslogo from '../../assets/trevasqlogo.png';
+import trevaslogo from '/assets/trevasqlogo.png';
 import { Link, useNavigate } from 'react-router-dom';
 import SearchBar from '../SearchBar/SearchBar.jsx'; 
 
