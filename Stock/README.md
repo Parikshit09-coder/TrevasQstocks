@@ -1,12 +1,33 @@
-# React + Vite
+🧠 TrevasQ Stocks — S&P 500 Dashboard
+TrevasQ is a responsive frontend-only stock dashboard that visualizes real-time mock performance of S&P 500 companies. Built with React.js, it lets users view price changes, search tickers, and explore sparkline charts with time frame filters like 1D, 5D, 1M, etc.
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+✨ Features
+🔍 Search S&P 500 stocks by ticker symbol
+📊 Real-time mock price updates
+📈 Sparkline mini-charts (1D, 5D, 1M...)
+📌 Dropdown filter for selecting timeframes
+🧪 Error Boundaries for safe rendering
+💡 Loading states and graceful error handling
+🎯 Clean, responsive UI built with Tailwind CSS
 
-Currently, two official plugins are available:
+⚙️ Tech Stack
+    React.js
+    Tailwind CSS
+    React Router DOM
+    React Sparklines
+    Mock data served from GitHub JSON file:https://raw.githubusercontent.com/Parikshit09-coder/stock-database/main/sp500_full_mock_data.json
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+# Steps to install
+# 1. Clone the repository
+git clone https://github.com/YOUR_USERNAME/trevasq-stocks.git
+cd trevasq-stocks
 
-## Expanding the ESLint configuration
+# 2. Install dependencies
+npm install
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+# 3. Create .env file & add
+VITE_URI_GRAPH_DATA=https://raw.githubusercontent.com/Parikshit09-coder/stock-database/main/sp500_full_mock_data.json
+
+# 4. Start the development server
+npm run dev
+
