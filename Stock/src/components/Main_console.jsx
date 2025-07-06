@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Sparklines, SparklinesLine } from 'react-sparklines';
 import { data, useNavigate } from 'react-router-dom';
 import { handleStockClick } from '../resolvers/HandleClick.js';
-import { fetchANY20 } from '../resolvers/SortURIFetcher.js';
+
 
 function App() {
   const navigate = useNavigate();
@@ -55,9 +55,8 @@ function App() {
        
           return updated;
         });
-      }, 5000);
+      }, 10000);
 
-      // Cleanup
       return () => clearInterval(intervalId);
     } catch (err) {
       console.error('Failed to fetch JSON:', err);

@@ -17,7 +17,22 @@ function TopRanks() {
       try {
         const res = await fetch(uri);
         const data = await res.json();
-        setRepoData(() => fetchTOP20(data));
+
+        
+
+        // Map and enrich data once
+        const updatedData = data.map((stock) => {
+          const price5d = stock.performance?.['5D'];
+          const percentChange5D =
+            ((price5d[price5d.length - 1] - price5d[0]) / price5d[0]) * 100;
+
+          return {
+            ...stock,
+            percentChange5D: percentChange5D.toFixed(2), 
+          };
+        });
+        const topGainers = fetchTOP20(updatedData);
+        setRepoData(topGainers);
       } catch (err) {
         console.error('Failed to fetch JSON:', err);
       }
@@ -36,20 +51,17 @@ function TopRanks() {
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-4 mt-0">
-      <h1 className="text-3xl font-extrabold text-green-700 mb-6 underline">Top Rankers - Gainers</h1>
+      <h1 className="text-3xl font-extrabold text-green-700 mb-6 underline">Top Rankers - Gainers(1D)</h1>
 
-      {/* Responsive table wrapper */}
       <div className="w-full overflow-x-auto">
         <table className="min-w-[600px] w-full bg-white shadow-md rounded-lg overflow-hidden cursor-pointer text-sm sm:text-base">
           <thead>
-            <tr
-              className="bg-gray-200 text-gray-700 uppercase text-xs sm:text-sm leading-normal"
-              tabIndex={-1}
-            >
+            <tr className="bg-gray-200 text-gray-700 uppercase text-xs sm:text-sm leading-normal">
               <th className="py-3 px-4 sm:px-6 text-left hover:bg-gray-300">Company Name</th>
               <th className="py-3 px-4 sm:px-6 text-left hover:bg-gray-300">Ticker</th>
               <th className="py-3 px-4 sm:px-6 text-left hover:bg-gray-300">Current Price</th>
-              <th className="py-3 px-4 sm:px-6 text-left hover:bg-gray-300">% Change 1D</th>
+              
+              <th className="py-3 px-4 sm:px-6 text-left hover:bg-gray-300">% Change 5D</th>
               <th className="py-3 px-4 sm:px-6 text-left hover:bg-gray-300">1D Performance</th>
             </tr>
           </thead>
@@ -63,17 +75,18 @@ function TopRanks() {
                 <td className="py-2 px-4 sm:px-6 font-bold">{stock.companyName}</td>
                 <td className="py-2 px-4 sm:px-6 font-semibold">{stock.ticker}</td>
                 <td className="py-2 px-4 sm:px-6 font-medium">${stock.currentPrice.toFixed(2)}</td>
+               
                 <td
                   className={`py-2 px-4 sm:px-6 font-medium ${
-                    stock.percentChange1D >= 0 ? 'text-green-600' : 'text-red-600'
+                    stock.percentChange5D >= 0 ? 'text-green-600' : 'text-red-600'
                   }`}
                 >
-                  {stock.percentChange1D > 0 ? '+' : ''}
-                  {stock.percentChange1D}%
+                  {stock.percentChange5D > 0 ? '+' : ''}
+                  {stock.percentChange5D}%
                 </td>
                 <td className="py-2 px-4 sm:px-6">
-                  <Sparklines data={stock?.performance?.['1D']} width={100} height={20} margin={5}>
-                    <SparklinesLine color={stock.percentChange1D >= 0 ? 'green' : 'red'} />
+                  <Sparklines data={stock?.performance?.['5D']} width={100} height={20} margin={5}>
+                    <SparklinesLine color={stock.percentChange5D >= 0 ? 'green' : 'red'} />
                   </Sparklines>
                 </td>
               </tr>

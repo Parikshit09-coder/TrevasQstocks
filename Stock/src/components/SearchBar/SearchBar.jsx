@@ -1,7 +1,7 @@
 // src/components/SearchBar.jsx
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-
+import ErrorBoundary from '../../resolvers/ErrorBoundaries';
 function SearchBar() {
   const [searchQuery, setSearchQuery] = useState('');
   const [suggestions, setSuggestions] = useState([]);
@@ -35,6 +35,7 @@ function SearchBar() {
   };
 
   return (
+    
     <div className="relative w-full max-w-md mx-auto">
       <div className="flex items-center gap-2 border-2 border-gray-300 rounded-3xl px-4 py-2 shadow-sm">
         <input
@@ -75,7 +76,7 @@ function SearchBar() {
           className="px-4 py-2 hover:bg-gray-100 cursor-pointer text-black"
           onClick={() => {
             setSearchQuery(stock.ticker);
-            setSuggestions([]); // clear suggestions
+            setSuggestions([]); 
             navigate(`/stock/${stock.ticker}`);
           }}
         >
