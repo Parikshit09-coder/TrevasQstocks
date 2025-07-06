@@ -8,7 +8,8 @@ import App from './components/Main_console.jsx'
 import StockPage from './components/StockPage/StockPage.jsx'
 import TopRanks from './components/Rankings/TopRanks.jsx'
 import BottomRanks from './components/Rankings/BottomRanks.jsx'
-
+import About from './components/About/About.jsx'
+import Contact from './components/Contact/contact.jsx'
 import ErrorBoundary from './resolvers/ErrorBoundaries.jsx'
 
 createRoot(document.getElementById('root')).render(
@@ -18,6 +19,8 @@ createRoot(document.getElementById('root')).render(
     <RotatingInfo/>
     <Routes>
       <Route path="/" element={<App />} />
+      <Route path="/about" element={<About />} />
+      <Route path="/contact" element={<Contact />} />
       <Route path="/stock/:ticker" element={<StockPage />} />
       <Route path="/stock/top_ranks" element={<TopRanks />} />
     
