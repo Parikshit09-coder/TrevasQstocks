@@ -1,5 +1,6 @@
 
 Check it out now:https://trevas-qstocks-git-main-parikshit09-coders-projects.vercel.app/
+
 🧠 TrevasQ Stocks — S&P 500 Dashboard
 TrevasQ is a responsive frontend-only stock dashboard that visualizes real-time mock performance of S&P 500 companies. Built with React.js, it lets users view price changes, search tickers, and explore sparkline charts with time frame filters like 1D, 5D, 1M, etc.
 
