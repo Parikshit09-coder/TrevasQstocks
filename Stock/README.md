@@ -19,7 +19,7 @@ TrevasQ is a responsive frontend-only stock dashboard that visualizes real-time 
 
 # Steps to install
 # 1. Clone the repository
-git clone https://github.com/YOUR_USERNAME/trevasq-stocks.git
+git clone https://github.com/Parikshit09-coder/TrevasQstocks.git
 cd trevasq-stocks
 
 # 2. Install dependencies
