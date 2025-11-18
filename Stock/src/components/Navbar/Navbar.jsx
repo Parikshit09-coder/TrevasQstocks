@@ -1,5 +1,5 @@
 import React from 'react';
-import trevaslogo from '/assets/trevasqlogo.png';
+import Logo from "../../assets/trevasqlogo.png";
 import { Link, useNavigate } from 'react-router-dom';
 import SearchBar from '../SearchBar/SearchBar.jsx'; 
 
@@ -13,7 +13,7 @@ function Navbar() {
         <div className="flex items-center space-x-3">
           <Link to="/">
             <img
-              src={trevaslogo}
+              src={Logo}
               alt="TrevasQ Logo"
               className="h-10 sm:h-14 w-auto transform transition-transform duration-300 hover:scale-150"
             />
