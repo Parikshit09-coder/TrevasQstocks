@@ -27,23 +27,25 @@ pipeline {
       }
     }
 
-    stage('Static Code Analysis') {
-      environment {
-        SONAR_URL = "http://<YOUR-IP>:9000"
-      }
-      steps {
-        withCredentials([string(credentialsId: 'sonarqube', variable: 'SONAR_AUTH_TOKEN')]) {
-          sh '''
-            cd Stock
-            sonar-scanner \
-              -Dsonar.projectKey=react-frontend \
-              -Dsonar.sources=src \
-              -Dsonar.host.url=${SONAR_URL} \
-              -Dsonar.login=${SONAR_AUTH_TOKEN}
-          '''
-        }
-      }
+  stage('Static Code Analysis') {
+  environment {
+    SONAR_URL = "http://<YOUR-IP>:9000"
+  }
+  steps {
+    withCredentials([string(credentialsId: 'sonarqube', variable: 'SONAR_TOKEN')]) {
+      sh '''
+        docker run --rm \
+          -v $(pwd)/Stock:/usr/src \
+          sonarsource/sonar-scanner-cli:5 \
+          -Dsonar.projectKey=react-frontend \
+          -Dsonar.sources=src \
+          -Dsonar.host.url=${SONAR_URL} \
+          -Dsonar.login=${SONAR_TOKEN}
+      '''
     }
+  }
+}
+
 
     stage('Build and Push Docker Image') {
       environment {
