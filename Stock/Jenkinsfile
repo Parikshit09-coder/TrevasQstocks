@@ -28,28 +28,45 @@ pipeline {
 
     stage('Static Code Analysis') {
       environment {
-        SONAR_URL = "http://184.72.86.164:9000"  // Fixed: removed extra "/" before port
+        SONAR_URL = "http://184.72.86.164:9000"
       }
       steps {
         withCredentials([string(credentialsId: 'sonarqube', variable: 'SONAR_TOKEN')]) {
-          sh '''
-            # Install SonarScanner globally
-            npm install -g sonarqube-scanner
+          script {
+            // Create sonar-project.properties file
+            sh '''
+              cd Stock
+              cat > sonar-project.properties << EOF
+              sonar.projectKey=react-frontend
+              sonar.projectName=React Frontend
+              sonar.projectVersion=1.0
+              sonar.sources=src
+              sonar.host.url=${SONAR_URL}
+              sonar.login=${SONAR_TOKEN}
+              sonar.sourceEncoding=UTF-8
+              sonar.exclusions=node_modules/**,dist/**,build/**,coverage/**,*.config.js,*.setup.js
+              sonar.javascript.file.suffixes=.js,.jsx,.ts,.tsx
+              sonar.tests=src
+              sonar.test.inclusions=**/*.test.js,**/*.test.jsx,**/*.test.ts,**/*.test.tsx
+              sonar.testExecutionReportPaths=coverage/test-report.xml
+              sonar.coverage.exclusions=node_modules/**,dist/**,build/**,coverage/**
+              EOF
+            '''
             
-            # Run SonarScanner analysis
-            cd Stock
-            npx sonarqube-scanner \
-              -Dsonar.projectKey=react-frontend \
-              -Dsonar.sources=src \
-              -Dsonar.host.url=${SONAR_URL} \
-              -Dsonar.login=${SONAR_TOKEN} \
-              -Dsonar.projectName="React Frontend" \
-              -Dsonar.sourceEncoding=UTF-8 \
-              -Dsonar.javascript.file.suffixes=.js,.jsx,.ts,.tsx \
-              -Dsonar.exclusions=node_modules/**,dist/**,build/** \
-              -Dsonar.tests=src \
-              -Dsonar.test.inclusions=**/*.test.js,**/*.test.jsx,**/*.test.ts,**/*.test.tsx
-          '''
+            // Run SonarScanner using Docker container with Java
+            sh '''
+              docker run --rm \
+                -v $(pwd)/Stock:/usr/src \
+                -w /usr/src \
+                -e SONAR_HOST_URL="${SONAR_URL}" \
+                -e SONAR_TOKEN="${SONAR_TOKEN}" \
+                sonarsource/sonar-scanner-cli:latest \
+                -Dsonar.projectKey=react-frontend \
+                -Dsonar.sources=src \
+                -Dsonar.host.url=${SONAR_URL} \
+                -Dsonar.login=${SONAR_TOKEN}
+            '''
+          }
         }
       }
     }
