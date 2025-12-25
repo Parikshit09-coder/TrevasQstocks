@@ -9,13 +9,12 @@ pipeline {
   environment {
     APP_DIR = "Stock"
 
-    // ---------- SONARQUBE ----------
-    SONAR_URL = "http://50.19.150.173:9000"
+    // ---------- SONAR ----------
     SONAR_PROJECT_KEY = "react-frontend"
 
     // ---------- DOCKER ----------
-    IMAGE_NAME  = "parikshitdesai388/cicd"
-    IMAGE_TAG   = "${BUILD_NUMBER}"
+    IMAGE_NAME   = "parikshitdesai388/cicd"
+    IMAGE_TAG    = "${BUILD_NUMBER}"
     DOCKER_IMAGE = "${IMAGE_NAME}:${IMAGE_TAG}"
 
     // ---------- GITOPS ----------
@@ -29,7 +28,6 @@ pipeline {
     stage('Checkout Source') {
       steps {
         checkout scm
-        sh 'ls -ltr'
       }
     }
 
@@ -55,14 +53,15 @@ pipeline {
     stage('Static Code Analysis') {
       steps {
         dir(env.APP_DIR) {
-          withCredentials([string(credentialsId: 'sonarqube', variable: 'SONAR_TOKEN')]) {
-            sh '''
-              npx sonar-scanner \
-                -Dsonar.projectKey=${SONAR_PROJECT_KEY} \
-                -Dsonar.sources=src \
-                -Dsonar.host.url=${SONAR_URL} \
-                -Dsonar.login=${SONAR_TOKEN}
-            '''
+          withSonarQubeEnv('SonarQube') {
+            script {
+              def scannerHome = tool 'SonarQubeScanner'
+              sh """
+                ${scannerHome}/bin/sonar-scanner \
+                  -Dsonar.projectKey=${SONAR_PROJECT_KEY} \
+                  -Dsonar.sources=src
+              """
+            }
           }
         }
       }
