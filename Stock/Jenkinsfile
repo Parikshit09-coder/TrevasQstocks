@@ -5,13 +5,15 @@ pipeline {
       args '--user root -v /var/run/docker.sock:/var/run/docker.sock'
     }
   }
-  triggers{
-    githubPush()
+  
+  // ✅ Add triggers for auto-run on push
+  triggers {
+    githubPush()  
   }
 
   stages {
     
-    stage('Checkout') {
+    stage('Checkout Source Code') {
       steps {
         checkout scm
       }
@@ -56,7 +58,6 @@ pipeline {
       }
     }
 
-    // Rest of your pipeline remains the same...
     stage('Build and Push Docker Image') {
       environment {
         DOCKER_IMAGE = "parikshitdesai388/cicd:${BUILD_NUMBER}"
@@ -71,27 +72,111 @@ pipeline {
       }
     }
 
-    stage('Update Deployment File') {
+    stage('Update Deployment File in GitOps Repo') {
       environment {
         GIT_REPO_NAME = "react-gitops-manifests"
         GIT_USER_NAME = "Parikshit09-coder"
       }
       steps {
-        withCredentials([string(credentialsId: 'github', variable: 'GITHUB_TOKEN')]) {
-          sh '''
-            git clone https://${GITHUB_TOKEN}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME}.git || true
-            cd ${GIT_REPO_NAME}
-            
-            git config user.email "gurudesai2005@gmail.com"
-            git config user.name "Parikshit09-coder"
-
-            sed -i "s|image: .*|image: parikshitdesai388/cicd:${BUILD_NUMBER}|" deployment.yaml
-            git add deployment.yaml
-            git commit -m "Update image to build ${BUILD_NUMBER}"
-            git push origin main
-          '''
+        retry(3) {  // ✅ Retry up to 3 times if git conflict occurs
+          withCredentials([string(credentialsId: 'github', variable: 'GITHUB_TOKEN')]) {
+            sh '''
+              set -e  # Exit on any error
+              
+              echo "=== Updating GitOps Repository ==="
+              
+              # ✅ ALWAYS start fresh to avoid conflicts
+              rm -rf ${GIT_REPO_NAME} || true
+              
+              # Clone the GitOps repo
+              git clone https://${GITHUB_TOKEN}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME}.git
+              cd ${GIT_REPO_NAME}
+              
+              # Configure git user
+              git config user.email "gurudesai2005@gmail.com"
+              git config user.name "Parikshit09-coder"
+              
+              # Ensure we're on main branch
+              git checkout main
+              
+              # Pull latest changes (in case of concurrent updates)
+              git pull origin main --no-rebase
+              
+              echo "Current image in deployment.yaml:"
+              grep "image:" deployment.yaml || echo "Image line not found"
+              
+              # ✅ Update the image tag in deployment.yaml
+              sed -i "s|image: .*|image: parikshitdesai388/cicd:${BUILD_NUMBER}|" deployment.yaml
+              
+              echo "Updated image in deployment.yaml:"
+              grep "image:" deployment.yaml
+              
+              # Check if there are actual changes
+              if git diff --exit-code; then
+                echo "No changes to commit. Image tag already at ${BUILD_NUMBER}."
+              else
+                # Commit the change
+                git add deployment.yaml
+                git commit -m "Update image to build ${BUILD_NUMBER}"
+                
+                # ✅ Push to GitHub
+                echo "Pushing changes to GitHub..."
+                git push origin main
+                
+                echo "✅ Successfully updated deployment.yaml with image: parikshitdesai388/cicd:${BUILD_NUMBER}"
+              fi
+            '''
+          }
         }
       }
     }
+    
+    stage('Notify ArgoCD (Optional)') {
+      steps {
+        script {
+          echo "✅ GitOps repository updated successfully!"
+          echo "✅ ArgoCD should auto-sync within minutes (if auto-sync enabled)"
+          echo "✅ New Docker image: parikshitdesai388/cicd:${BUILD_NUMBER}"
+          
+          // Optional: Trigger ArgoCD sync via API
+          // sh '''
+          //   curl -X POST http://argocd-server/api/v1/applications/cicd-pipeline/sync \
+          //     -H "Authorization: Bearer ${ARGOCD_TOKEN}" \
+          //     -H "Content-Type: application/json" \
+          //     --data '{}' || echo "ArgoCD sync trigger failed (maybe auto-sync is enabled)"
+          // '''
+        }
+      }
+    }
+  }
+  
+  post {
+    success {
+      echo "🎉 Pipeline SUCCESS!"
+      echo "Build Number: ${BUILD_NUMBER}"
+      echo "Image: parikshitdesai388/cicd:${BUILD_NUMBER}"
+      echo "GitOps Repo: https://github.com/Parikshit09-coder/react-gitops-manifests"
+      echo "ArgoCD App: cicd-pipeline"
+    }
+    failure {
+      echo "❌ Pipeline FAILED!"
+      echo "Check the logs above for errors."
+      echo "Common issues:"
+      echo "1. Git conflicts (fixed with retry logic)"
+      echo "2. Docker push authentication"
+      echo "3. SonarQube connection"
+      echo "4. GitHub permissions"
+    }
+    always {
+      echo "Pipeline completed. Cleaning up..."
+      // Clean Docker images to save space
+      sh 'docker system prune -f --filter "until=24h" || true'
+    }
+  }
+  
+  options {
+    timeout(time: 30, unit: 'MINUTES')
+    buildDiscarder(logRotator(numToKeepStr: '10'))
+    disableConcurrentBuilds()  // ✅ Prevent multiple pipelines causing conflicts
   }
 }
