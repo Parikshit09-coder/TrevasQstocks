@@ -35,7 +35,10 @@ pipeline {
     /* ================= INSTALL ================= */
     stage('Install Dependencies') {
       steps {
-        sh 'npm ci'
+        
+           dir('Stock') {
+            sh 'npm ci'
+        }
       }
     }
 
