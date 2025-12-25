@@ -28,7 +28,7 @@ function Navbar() {
 
         
         <div className="flex flex-wrap gap-2 text-sm sm:text-base items-center justify-center">
-          <Link to="/" className="text-pink-200 hover:text-gray-700 font-medium underline"> Home</Link>
+          <Link to="/" className="text-pink-200 hover:text-gray-700 font-medium underline"> Homerr</Link>
           <Link to="/about" className="text-pink-200 hover:text-gray-700 font-medium underline">About US</Link>
           <Link to="/contact" className="text-pink-200 hover:text-gray-700 font-medium underline">Contact US </Link>
 
