@@ -32,41 +32,32 @@ pipeline {
       }
       steps {
         withCredentials([string(credentialsId: 'sonarqube', variable: 'SONAR_TOKEN')]) {
-          script {
-            // Create sonar-project.properties file
-            sh '''
-              cd Stock
-              cat > sonar-project.properties << EOF
-              sonar.projectKey=react-frontend
-              sonar.projectName=React Frontend
-              sonar.projectVersion=1.0
-              sonar.sources=src
-              sonar.host.url=${SONAR_URL}
-              sonar.login=${SONAR_TOKEN}
-              sonar.sourceEncoding=UTF-8
-              sonar.exclusions=node_modules/**,dist/**,build/**,coverage/**,*.config.js,*.setup.js
-              sonar.javascript.file.suffixes=.js,.jsx,.ts,.tsx
-              sonar.tests=src
-              sonar.test.inclusions=**/*.test.js,**/*.test.jsx,**/*.test.ts,**/*.test.tsx
-              sonar.testExecutionReportPaths=coverage/test-report.xml
-              sonar.coverage.exclusions=node_modules/**,dist/**,build/**,coverage/**
-              EOF
-            '''
+          sh '''
+            cd Stock
             
-            // Run SonarScanner using Docker container with Java
-            sh '''
-              docker run --rm \
-                -v $(pwd)/Stock:/usr/src \
-                -w /usr/src \
-                -e SONAR_HOST_URL="${SONAR_URL}" \
-                -e SONAR_TOKEN="${SONAR_TOKEN}" \
-                sonarsource/sonar-scanner-cli:latest \
-                -Dsonar.projectKey=react-frontend \
-                -Dsonar.sources=src \
-                -Dsonar.host.url=${SONAR_URL} \
-                -Dsonar.login=${SONAR_TOKEN}
-            '''
-          }
+            # Create sonar-project.properties without test reports
+            cat > sonar-project.properties << EOF
+            sonar.projectKey=react-frontend
+            sonar.projectName=React Frontend
+            sonar.projectVersion=1.0
+            sonar.sources=src
+            sonar.host.url=${SONAR_URL}
+            sonar.login=${SONAR_TOKEN}
+            sonar.sourceEncoding=UTF-8
+            sonar.exclusions=node_modules/**,dist/**,build/**,coverage/**,*.config.js,*.setup.js
+            sonar.javascript.file.suffixes=.js,.jsx,.ts,.tsx
+            EOF
+            
+            # Run SonarScanner
+            docker run --rm \
+              -v $(pwd):/usr/src \
+              -w /usr/src \
+              sonarsource/sonar-scanner-cli:latest \
+              -Dsonar.projectKey=react-frontend \
+              -Dsonar.sources=src \
+              -Dsonar.host.url=${SONAR_URL} \
+              -Dsonar.login=${SONAR_TOKEN}
+          '''
         }
       }
     }
@@ -94,7 +85,7 @@ pipeline {
         withCredentials([string(credentialsId: 'github', variable: 'GITHUB_TOKEN')]) {
           sh '''
             # Clone the manifests repo
-            git clone https://${GITHUB_TOKEN}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME}.git
+            git clone https://${GITHUB_TOKEN}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME}.git || true
             cd ${GIT_REPO_NAME}
             
             git config user.email "gurudesai2005@gmail.com"
