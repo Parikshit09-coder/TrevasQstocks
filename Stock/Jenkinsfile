@@ -6,78 +6,52 @@ pipeline {
     }
   }
 
-  environment {
-    APP_DIR = "Stock"
-
-    // ---------- SONAR ----------
-    SONAR_PROJECT_KEY = "react-frontend"
-
-    // ---------- DOCKER ----------
-    IMAGE_NAME   = "parikshitdesai388/cicd"
-    IMAGE_TAG    = "${BUILD_NUMBER}"
-    DOCKER_IMAGE = "${IMAGE_NAME}:${IMAGE_TAG}"
-
-    // ---------- GITOPS ----------
-    GITOPS_REPO = "react-gitops-manifests"
-    GIT_USER    = "Parikshit09-coder"
-  }
-
   stages {
 
-    /* ================= CHECKOUT ================= */
-    stage('Checkout Source') {
+    stage('Checkout') {
       steps {
+        sh 'echo passed'
         checkout scm
       }
     }
 
-    /* ================= INSTALL ================= */
     stage('Install Dependencies') {
       steps {
-        dir(env.APP_DIR) {
-          sh 'npm ci'
-        }
+        sh 'cd Stock && npm ci'
       }
     }
 
-    /* ================= BUILD ================= */
     stage('Build React App') {
       steps {
-        dir(env.APP_DIR) {
-          sh 'npm run build'
-        }
+        sh 'cd Stock && npm run build'
       }
     }
 
-    /* ================= SONARQUBE ================= */
     stage('Static Code Analysis') {
+      environment {
+        SONAR_URL = "http://<YOUR-IP>:9000"
+      }
       steps {
-        dir(env.APP_DIR) {
-          withSonarQubeEnv('SonarQube') {
-            script {
-              def scannerHome = tool 'SonarQubeScanner'
-              sh """
-                ${scannerHome}/bin/sonar-scanner \
-                  -Dsonar.projectKey=${SONAR_PROJECT_KEY} \
-                  -Dsonar.sources=src
-              """
-            }
-          }
+        withCredentials([string(credentialsId: 'sonarqube', variable: 'SONAR_AUTH_TOKEN')]) {
+          sh '''
+            cd Stock
+            sonar-scanner \
+              -Dsonar.projectKey=react-frontend \
+              -Dsonar.sources=src \
+              -Dsonar.host.url=${SONAR_URL} \
+              -Dsonar.login=${SONAR_AUTH_TOKEN}
+          '''
         }
       }
     }
 
-    /* ================= DOCKER BUILD ================= */
-    stage('Build Docker Image') {
-      steps {
-        sh 'docker build -t ${DOCKER_IMAGE} Stock'
+    stage('Build and Push Docker Image') {
+      environment {
+        DOCKER_IMAGE = "parikshitdesai388/cicd:${BUILD_NUMBER}"
       }
-    }
-
-    /* ================= DOCKER PUSH ================= */
-    stage('Push Docker Image') {
       steps {
         script {
+          sh 'cd Stock && docker build -t ${DOCKER_IMAGE} .'
           docker.withRegistry('https://index.docker.io/v1/', 'docker-cred') {
             docker.image("${DOCKER_IMAGE}").push()
           }
@@ -85,35 +59,24 @@ pipeline {
       }
     }
 
-    /* ================= UPDATE GITOPS ================= */
-    stage('Update Deployment Manifest') {
+    stage('Update Deployment File') {
+      environment {
+        GIT_REPO_NAME = "react-gitops-manifests"
+        GIT_USER_NAME = "Parikshit09-coder"
+      }
       steps {
         withCredentials([string(credentialsId: 'github', variable: 'GITHUB_TOKEN')]) {
           sh '''
-            rm -rf gitops
-            git clone https://${GITHUB_TOKEN}@github.com/${GIT_USER}/${GITOPS_REPO}.git gitops
-
-            cd gitops
             git config user.email "gurudesai2005@gmail.com"
             git config user.name "Parikshit09-coder"
 
-            sed -i "s|image: .*|image: ${DOCKER_IMAGE}|" deployment.yaml
-
+            sed -i "s|image: .*|image: parikshitdesai388/cicd:${BUILD_NUMBER}|" deployment.yaml
             git add deployment.yaml
-            git commit -m "Update image to ${IMAGE_TAG}"
-            git push origin main
+            git commit -m "Update image to ${BUILD_NUMBER}"
+            git push https://${GITHUB_TOKEN}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME}.git main
           '''
         }
       }
-    }
-  }
-
-  post {
-    success {
-      echo "CI pipeline completed successfully 🚀"
-    }
-    failure {
-      echo "CI pipeline failed ❌"
     }
   }
 }
